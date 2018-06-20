@@ -220,6 +220,7 @@ class TableView extends React.Component {
           footerLabel: section.props.footerLabel,
           footerHeight: section.props.footerHeight,
           headerHeight: section.props.headerHeight,
+          sectionStyle: section.props.sectionStyle,
           items,
           count,
         })
@@ -249,7 +250,7 @@ class TableView extends React.Component {
   scrollTo(x, y, animated) {
     NativeModules.RNTableViewManager.scrollTo(findNodeHandle(this.tableView), x, y, animated)
   }
-  
+
   scrollToIndex({ index, section = 0, animated = true }) {
     NativeModules.RNTableViewManager.scrollToIndex(findNodeHandle(this.tableView), index, section, animated)
   }

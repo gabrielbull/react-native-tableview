@@ -16,6 +16,7 @@ TableViewSection.propTypes = {
   arrow: PropTypes.bool,
   footerHeight: PropTypes.number,
   headerHeight: PropTypes.number,
+  sectionStyle: PropTypes.number,
 }
 
 export default TableViewSection

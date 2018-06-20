@@ -176,6 +176,10 @@ RCT_CUSTOM_VIEW_PROPERTY(cellLayoutMargins, UIEdgeInsets, RNTableView) {
                              @"DisclosureButton": @(UITableViewCellAccessoryDetailDisclosureButton),
                              @"Checkmark": @(UITableViewCellAccessoryCheckmark),
                              @"DetailButton": @(UITableViewCellAccessoryDetailButton)
+                             },
+                     @"SectionStyle": @{
+                             @"None": @0,
+                             @"Rounded": @1,
                              }
                      }
              };

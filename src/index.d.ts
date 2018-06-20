@@ -81,6 +81,10 @@ export interface Constants {
     DisclosureButton: number
     Checkmark: number
     DetailButton: number
+  },
+  SectionStyle: {
+    None: 0
+    Rounded: 1
   }
 }
 
@@ -113,6 +117,11 @@ export enum CellEditingStyle {
 export enum SeparatorStyle {
   None = 0,
   Line,
+}
+
+export enum SectionStyle {
+  None = 0,
+  Rounded = 1,
 }
 
 interface SectionProps {
@@ -150,6 +159,11 @@ interface SectionProps {
    * Height of footer
    */
   footerHeight?: number
+
+  /**
+   * Section Style
+   */
+  sectionStyle?: SectionStyle
 }
 
 interface ItemProps {
@@ -182,7 +196,7 @@ interface ItemProps {
    * If cell can be deleted in editing mode
    */
   canEdit?: boolean
-  
+
   /**
    * Cell selection style
    */
@@ -274,7 +288,7 @@ interface TableViewProps {
 declare class TableView extends React.Component<TableViewProps> {
   /**
    * Scroll to coordinates
-   * 
+   *
    * @param x Horizontal pixels to scroll
    * @param y Vertical pixels to scroll
    * @param animated With animation or not
@@ -283,7 +297,7 @@ declare class TableView extends React.Component<TableViewProps> {
 
   /**
    * Scroll to an index
-   * 
+   *
    * @param params scroll params
    * @param params.index index of the cell
    * @param params.section index of the section @default 0
@@ -294,9 +308,9 @@ declare class TableView extends React.Component<TableViewProps> {
 
 declare namespace TableView {
   const Consts: Constants
-  class Section extends React.Component<SectionProps> {}
-  class Item extends React.Component<ItemProps> {}
-  class Cell extends React.Component<ItemProps> {}
+  class Section extends React.Component<SectionProps> { }
+  class Item extends React.Component<ItemProps> { }
+  class Cell extends React.Component<ItemProps> { }
 }
 
 export default TableView

@@ -310,6 +310,8 @@ RCT_NOT_IMPLEMENTED(-initWithCoder:(NSCoder *)aDecoder)
 
 -(void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath
 {
+    NSDictionary *item = [self dataForRow:indexPath.item section:indexPath.section];
+
     if (self.hasCellLayoutMargins && [cell respondsToSelector:@selector(setLayoutMargins:)] && [cell respondsToSelector:@selector(setPreservesSuperviewLayoutMargins:)]) {
         [cell setPreservesSuperviewLayoutMargins:NO];
         [cell setLayoutMargins:self.cellLayoutMargins];
@@ -328,7 +330,6 @@ RCT_NOT_IMPLEMENTED(-initWithCoder:(NSCoder *)aDecoder)
     if (self.tintColor){
         cell.tintColor = self.tintColor;
     }
-    NSDictionary *item = [self dataForRow:indexPath.item section:indexPath.section];
     if (self.selectedTextColor && [item[@"selected"] intValue]){
         cell.textLabel.textColor = self.selectedTextColor;
         cell.detailTextLabel.textColor = self.selectedTextColor;
@@ -372,6 +373,55 @@ RCT_NOT_IMPLEMENTED(-initWithCoder:(NSCoder *)aDecoder)
             UIGraphicsEndImageContext();
         } else {
             cell.imageView.image = image;
+        }
+    }
+    
+    if ([self styleForSection:indexPath.section] == 1) {
+        if ([cell respondsToSelector:@selector(tintColor)]) {
+            if (tableView == self.tableView) {
+                CGFloat cornerRadius = 5.f;
+                cell.backgroundColor = UIColor.clearColor;
+                CAShapeLayer *layer = [[CAShapeLayer alloc] init];
+                CGMutablePathRef pathRef = CGPathCreateMutable();
+                CGRect bounds = CGRectInset(cell.bounds, 0, 0);
+                BOOL addLine = NO;
+                if (indexPath.row == 0 && indexPath.row == [tableView numberOfRowsInSection:indexPath.section]-1) {
+                    CGPathAddRoundedRect(pathRef, nil, bounds, cornerRadius, cornerRadius);
+                } else if (indexPath.row == 0) {
+                    CGPathMoveToPoint(pathRef, nil, CGRectGetMinX(bounds), CGRectGetMaxY(bounds));
+                    CGPathAddArcToPoint(pathRef, nil, CGRectGetMinX(bounds), CGRectGetMinY(bounds), CGRectGetMidX(bounds), CGRectGetMinY(bounds), cornerRadius);
+                    CGPathAddArcToPoint(pathRef, nil, CGRectGetMaxX(bounds), CGRectGetMinY(bounds), CGRectGetMaxX(bounds), CGRectGetMidY(bounds), cornerRadius);
+                    CGPathAddLineToPoint(pathRef, nil, CGRectGetMaxX(bounds), CGRectGetMaxY(bounds));
+                    addLine = YES;
+                } else if (indexPath.row == [tableView numberOfRowsInSection:indexPath.section]-1) {
+                    CGPathMoveToPoint(pathRef, nil, CGRectGetMinX(bounds), CGRectGetMinY(bounds));
+                    CGPathAddArcToPoint(pathRef, nil, CGRectGetMinX(bounds), CGRectGetMaxY(bounds), CGRectGetMidX(bounds), CGRectGetMaxY(bounds), cornerRadius);
+                    CGPathAddArcToPoint(pathRef, nil, CGRectGetMaxX(bounds), CGRectGetMaxY(bounds), CGRectGetMaxX(bounds), CGRectGetMidY(bounds), cornerRadius);
+                    CGPathAddLineToPoint(pathRef, nil, CGRectGetMaxX(bounds), CGRectGetMinY(bounds));
+                } else {
+                    CGPathAddRect(pathRef, nil, bounds);
+                    addLine = YES;
+                }
+                layer.path = pathRef;
+                CFRelease(pathRef);
+                layer.fillColor = [UIColor colorWithWhite:1.f alpha:0.8f].CGColor;
+                
+                if (addLine == YES) {
+                    CALayer *lineLayer = [[CALayer alloc] init];
+                    CGFloat lineHeight = (1.f / [UIScreen mainScreen].scale);
+                    if (self.hasCellSeparatorInset) {
+                        lineLayer.frame = CGRectMake(CGRectGetMinX(bounds)+self.cellSeparatorInset.left, bounds.size.height-lineHeight, bounds.size.width - self.cellSeparatorInset.left - self.cellSeparatorInset.right, lineHeight);
+                    } else {
+                        lineLayer.frame = CGRectMake(CGRectGetMinX(bounds), bounds.size.height-lineHeight, bounds.size.width, lineHeight);
+                    }
+                    lineLayer.backgroundColor = tableView.separatorColor.CGColor;
+                    [layer addSublayer:lineLayer];
+                }
+                UIView *testView = [[UIView alloc] initWithFrame:bounds];
+                [testView.layer insertSublayer:layer atIndex:0];
+                testView.backgroundColor = UIColor.clearColor;
+                cell.backgroundView = testView;
+            }
         }
     }
     
@@ -509,6 +559,13 @@ RCT_NOT_IMPLEMENTED(-initWithCoder:(NSCoder *)aDecoder)
 
 -(NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
     return _sections[section][@"footerLabel"];
+}
+
+-(int)styleForSection:(NSInteger)section {
+    if (_sections[section][@"sectionStyle"]) {
+        return [RCTConvert int:_sections[section][@"sectionStyle"]];
+    }
+    return 0;
 }
 
 -(NSMutableDictionary *)dataForRow:(NSInteger)row section:(NSInteger)section {
