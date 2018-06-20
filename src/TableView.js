@@ -100,6 +100,7 @@ class TableView extends React.Component {
     canRefresh: PropTypes.bool,
     cellSeparatorInset: EdgeInsetsPropType,
     cellLayoutMargins: EdgeInsetsPropType,
+    data: PropTypes.array
   }
 
   static defaultProps = {
@@ -151,31 +152,18 @@ class TableView extends React.Component {
     onEndDisplayingCell: () => null,
   }
 
-  constructor(props) {
-    super(props)
-
-    this.state = this._stateFromProps(props)
-  }
-
-  componentWillReceiveProps(nextProps) {
-    const state = this._stateFromProps(nextProps)
-    this.setState(state)
-
-    if (this.props.refreshing === false && nextProps.refreshing) {
+  componentDidUpdate (prevProps) {
+    if (prevProps.refreshing === false && this.props.refreshing) {
       NativeModules.RNTableViewManager.startRefreshing(findNodeHandle(this.tableView))
-    }
-
-    if (this.props.refreshing && !nextProps.refreshing) {
+    } else if (prevProps.refreshing && !this.props.refreshing) {
       NativeModules.RNTableViewManager.stopRefreshing(findNodeHandle(this.tableView))
     }
   }
 
-  // Translate TableView prop and children into stuff that RNTableView understands.
-  _stateFromProps(props) {
+  static getDerivedStateFromProps (props) {
+    if (props.data) return { sections: props.data }
     const sections = []
-    const additionalItems = []
     const children = []
-    const { json } = props
 
     // iterate over sections
     React.Children.forEach(props.children, (section, index) => {
@@ -231,21 +219,17 @@ class TableView extends React.Component {
           el.label = el.children
         }
 
-        additionalItems.push(el)
       } else if (section) {
         children.push(section)
       }
     })
 
-    this.sections = sections
-
     return {
-      sections,
-      additionalItems,
-      children,
-      json,
+      sections
     }
   }
+
+  state = {}
 
   scrollTo(x, y, animated) {
     NativeModules.RNTableViewManager.scrollTo(findNodeHandle(this.tableView), x, y, animated)
@@ -263,12 +247,12 @@ class TableView extends React.Component {
     const data = event.nativeEvent
 
     if (
-      this.sections[data.selectedSection] &&
-      this.sections[data.selectedSection].items[data.selectedIndex] &&
-      this.sections[data.selectedSection] &&
-      this.sections[data.selectedSection].items[data.selectedIndex].onPress
+      this.state.sections[data.selectedSection] &&
+      this.state.sections[data.selectedSection].items[data.selectedIndex] &&
+      this.state.sections[data.selectedSection] &&
+      this.state.sections[data.selectedSection].items[data.selectedIndex].onPress
     ) {
-      this.sections[data.selectedSection] && this.sections[data.selectedSection].items[data.selectedIndex].onPress(data)
+      this.state.sections[data.selectedSection] && this.state.sections[data.selectedSection].items[data.selectedIndex].onPress(data)
     }
 
     this.props.onPress(data)
@@ -280,8 +264,8 @@ class TableView extends React.Component {
 
     this.props.onAccessoryPress(data)
 
-    if (this.sections) {
-      const pressedItem = this.sections[data.accessorySection].items[data.accessoryIndex]
+    if (this.state.sections) {
+      const pressedItem = this.state.sections[data.accessorySection].items[data.accessoryIndex]
 
       pressedItem.onAccessoryPress && pressedItem.onAccessoryPress(data)
     }
@@ -293,13 +277,13 @@ class TableView extends React.Component {
     const data = event.nativeEvent
 
     if (
-      this.sections[data.selectedSection] &&
-      this.sections[data.selectedSection].items[data.selectedIndex] &&
-      this.sections[data.selectedSection] &&
-      this.sections[data.selectedSection].items[data.selectedIndex].onChange
+      this.state.sections[data.selectedSection] &&
+      this.state.sections[data.selectedSection].items[data.selectedIndex] &&
+      this.state.sections[data.selectedSection] &&
+      this.state.sections[data.selectedSection].items[data.selectedIndex].onChange
     ) {
-      this.sections[data.selectedSection] &&
-        this.sections[data.selectedSection].items[data.selectedIndex].onChange(data)
+      this.state.sections[data.selectedSection] &&
+        this.state.sections[data.selectedSection].items[data.selectedIndex].onChange(data)
     }
 
     this.props.onChange(data)
@@ -310,11 +294,11 @@ class TableView extends React.Component {
     const data = event.nativeEvent
 
     if (
-      this.sections[data.section] &&
-      this.sections[data.section].items[data.row] &&
-      this.sections[data.section].items[data.row].onWillDisplayCell
+      this.state.sections[data.section] &&
+      this.state.sections[data.section].items[data.row] &&
+      this.state.sections[data.section].items[data.row].onWillDisplayCell
     ) {
-      this.sections[data.section].items[data.row].onWillDisplayCell(data)
+      this.state.sections[data.section].items[data.row].onWillDisplayCell(data)
     }
 
     this.props.onWillDisplayCell(data)
@@ -325,11 +309,11 @@ class TableView extends React.Component {
     const data = event.nativeEvent
 
     if (
-      this.sections[data.section] &&
-      this.sections[data.section].items[data.row] &&
-      this.sections[data.section].items[data.row].onEndDisplayingCell
+      this.state.sections[data.section] &&
+      this.state.sections[data.section].items[data.row] &&
+      this.state.sections[data.section].items[data.row].onEndDisplayingCell
     ) {
-      this.sections[data.section].items[data.row].onEndDisplayingCell(data)
+      this.state.sections[data.section].items[data.row].onEndDisplayingCell(data)
     }
 
     this.props.onEndDisplayingCell(data)
@@ -346,16 +330,13 @@ class TableView extends React.Component {
         scrollIndicatorInsets={this.props.contentInset}
         {...this.props}
         style={[{ flex: 1 }, this.props.style]}
-        json={this.state.json}
         onScroll={(...args) => this._onScroll(...args)}
         onPress={(...args) => this._onPress(...args)}
         onAccessoryPress={(...args) => this._onAccessoryPress(...args)}
         onChange={(...args) => this._onChange(...args)}
         onWillDisplayCell={(...args) => this._onWillDisplayCell(...args)}
         onEndDisplayingCell={(...args) => this._onEndDisplayingCell(...args)}
-      >
-        {this.state.children}
-      </RNTableView>
+      />
     )
   }
 }

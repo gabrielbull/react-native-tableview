@@ -124,7 +124,7 @@ export enum SectionStyle {
   Rounded = 1,
 }
 
-interface SectionProps {
+export interface SectionProps {
   /**
    * Show the DisclosureIndicator accessory type
    */
@@ -166,7 +166,7 @@ interface SectionProps {
   sectionStyle?: SectionStyle
 }
 
-interface ItemProps {
+export interface ItemProps {
   /**
    * This value will be returned on event callbacks
    */
@@ -215,7 +215,14 @@ interface ItemProps {
   cellEditingStyle?: CellEditingStyle
 }
 
-interface TableViewProps {
+export type Section = SectionProps & {
+  items: Array<ItemProps & { label?: string }>,
+  count: number
+}
+
+export type SectionsData = Array<Section>
+
+export interface TableViewProps {
   style?: ViewStyle
   tableViewStyle?: TableViewStyle
   tableViewCellStyle?: TableViewCellStyle
@@ -282,7 +289,8 @@ interface TableViewProps {
   onWillDisplayCell?(event: DisplayCallBack): void
   onEndDisplayingCell?(event: DisplayCallBack): void,
   cellSeparatorInset: Insets,
-  cellLayoutMargins: Insets
+  cellLayoutMargins: Insets,
+  data?: SectionsData
 }
 
 declare class TableView extends React.Component<TableViewProps> {
